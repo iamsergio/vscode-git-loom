@@ -163,6 +163,25 @@ export function activate(context: vscode.ExtensionContext): void {
       }
     }),
     vscode.commands.registerCommand(
+      "gitLoom.copyCommitHash",
+      async (node: WeaveNode | undefined) => {
+        if (!node || node.kind !== "commit") {
+          return;
+        }
+        await vscode.env.clipboard.writeText(node.commit.hash);
+      },
+    ),
+    vscode.commands.registerCommand(
+      "gitLoom.copyBranchName",
+      async (node: WeaveNode | undefined) => {
+        if (!node || node.kind !== "branch") {
+          return;
+        }
+        const label = node.section.names.map((n) => n.name).join(", ");
+        await vscode.env.clipboard.writeText(label);
+      },
+    ),
+    vscode.commands.registerCommand(
       "gitLoom.openFileDiff",
       async (root: string, hash: string, path: string) => {
         try {
