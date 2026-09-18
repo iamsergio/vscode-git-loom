@@ -33,6 +33,11 @@ suite("smoke", () => {
     const commands = await vscode.commands.getCommands(true);
     assert.ok(commands.includes("gitLoom.refresh"));
     assert.ok(commands.includes("gitLoom.reword"));
+    assert.ok(commands.includes("gitLoom.dropCommit"));
+    assert.ok(commands.includes("gitLoom.dropBranch"));
+    assert.ok(commands.includes("gitLoom.update"));
+    assert.ok(commands.includes("gitLoom.copyCommitHash"));
+    assert.ok(commands.includes("gitLoom.copyBranchName"));
     assert.ok(commands.includes("gitLoom.openFileDiff"));
     assert.ok(commands.includes("gitLoom.hideFiles"));
     assert.ok(commands.includes("gitLoom.showFiles"));

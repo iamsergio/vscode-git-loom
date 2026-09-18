@@ -84,6 +84,36 @@
         "category": "Git Loom"
       },
       {
+        "command": "gitLoom.dropCommit",
+        "title": "Drop Commit...",
+        "icon": "$(trash)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.dropBranch",
+        "title": "Drop Branch...",
+        "icon": "$(trash)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.update",
+        "title": "Update",
+        "icon": "$(cloud-download)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.copyCommitHash",
+        "title": "Copy Commit Hash",
+        "icon": "$(copy)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.copyBranchName",
+        "title": "Copy Branch Name",
+        "icon": "$(copy)",
+        "category": "Git Loom"
+      },
+      {
         "command": "gitLoom.openFileDiff",
         "title": "Open Changes",
         "category": "Git Loom"
@@ -104,19 +134,24 @@
     "menus": {
       "view/title": [
         {
-          "command": "gitLoom.refresh",
+          "command": "gitLoom.update",
           "when": "view == gitLoom.weave",
           "group": "navigation@1"
         },
         {
+          "command": "gitLoom.refresh",
+          "when": "view == gitLoom.weave",
+          "group": "navigation@2"
+        },
+        {
           "command": "gitLoom.hideFiles",
           "when": "view == gitLoom.weave && gitLoom.showFiles",
-          "group": "navigation@2"
+          "group": "navigation@3"
         },
         {
           "command": "gitLoom.showFiles",
           "when": "view == gitLoom.weave && !gitLoom.showFiles",
-          "group": "navigation@2"
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -129,11 +164,47 @@
           "command": "gitLoom.reword",
           "when": "view == gitLoom.weave && viewItem == commit",
           "group": "1_modify"
+        },
+        {
+          "command": "gitLoom.dropCommit",
+          "when": "view == gitLoom.weave && viewItem == commit",
+          "group": "1_modify"
+        },
+        {
+          "command": "gitLoom.dropBranch",
+          "when": "view == gitLoom.weave && viewItem == branch",
+          "group": "1_modify"
+        },
+        {
+          "command": "gitLoom.copyCommitHash",
+          "when": "view == gitLoom.weave && viewItem == commit",
+          "group": "9_copy"
+        },
+        {
+          "command": "gitLoom.copyBranchName",
+          "when": "view == gitLoom.weave && viewItem == branch",
+          "group": "9_copy"
         }
       ],
       "commandPalette": [
         {
           "command": "gitLoom.reword",
+          "when": "false"
+        },
+        {
+          "command": "gitLoom.dropCommit",
+          "when": "false"
+        },
+        {
+          "command": "gitLoom.dropBranch",
+          "when": "false"
+        },
+        {
+          "command": "gitLoom.copyCommitHash",
+          "when": "false"
+        },
+        {
+          "command": "gitLoom.copyBranchName",
           "when": "false"
         },
         {

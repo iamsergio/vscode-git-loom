@@ -5,7 +5,7 @@ import {
   openFileDiff,
 } from "./gitShowProvider";
 import { LoomError } from "./loom/model";
-import { runGit } from "./loom/runner";
+import { runGit, runLoom } from "./loom/runner";
 import { TextStatusSource } from "./loom/statusSource";
 import { RewordController } from "./reword/rewordController";
 import { WeaveNode, WeaveTreeProvider } from "./tree/weaveTreeProvider";
@@ -88,6 +88,97 @@ export function activate(context: vscode.ExtensionContext): void {
           const message = err instanceof Error ? err.message : String(err);
           vscode.window.showErrorMessage(message);
         }
+      },
+    ),
+    vscode.commands.registerCommand(
+      "gitLoom.dropCommit",
+      async (node: WeaveNode | undefined) => {
+        if (!node || node.kind !== "commit") {
+          return;
+        }
+        try {
+          await runLoom(
+            getExecutable(),
+            ["drop", node.commit.hash, "-y"],
+            node.root,
+          );
+          provider.refresh();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          vscode.window.showErrorMessage(message);
+        }
+      },
+    ),
+    vscode.commands.registerCommand(
+      "gitLoom.dropBranch",
+      async (node: WeaveNode | undefined) => {
+        if (!node || node.kind !== "branch") {
+          return;
+        }
+        const name = node.section.names[0]?.name;
+        if (!name) {
+          return;
+        }
+        const commitCount = node.section.commits.length;
+        if (commitCount > 0) {
+          const choice = await vscode.window.showWarningMessage(
+            `Drop branch '${name}' and its ${commitCount} commit${commitCount === 1 ? "" : "s"}? This cannot be undone.`,
+            { modal: true },
+            "Drop Branch",
+          );
+          if (choice !== "Drop Branch") {
+            return;
+          }
+        }
+        try {
+          await runLoom(getExecutable(), ["drop", name, "-y"], node.root);
+          provider.refresh();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          vscode.window.showErrorMessage(message);
+        }
+      },
+    ),
+    vscode.commands.registerCommand("gitLoom.update", async () => {
+      let root: string;
+      try {
+        root = await resolveRepoRoot();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(message);
+        return;
+      }
+      try {
+        await vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "Updating…",
+          },
+          () => runLoom(getExecutable(), ["update", "-y"], root),
+        );
+        provider.refresh();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(message);
+      }
+    }),
+    vscode.commands.registerCommand(
+      "gitLoom.copyCommitHash",
+      async (node: WeaveNode | undefined) => {
+        if (!node || node.kind !== "commit") {
+          return;
+        }
+        await vscode.env.clipboard.writeText(node.commit.hash);
+      },
+    ),
+    vscode.commands.registerCommand(
+      "gitLoom.copyBranchName",
+      async (node: WeaveNode | undefined) => {
+        if (!node || node.kind !== "branch") {
+          return;
+        }
+        const label = node.section.names.map((n) => n.name).join(", ");
+        await vscode.env.clipboard.writeText(label);
       },
     ),
     vscode.commands.registerCommand(
