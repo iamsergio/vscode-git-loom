@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: MIT
+
+# CI that builds and tests this vscode extension
+
+name: build
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+env:
+  GIT_LOOM_VERSION: 0.23.0
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Use Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+      - name: Install dependencies
+        run: |
+          npm install --loglevel verbose
+          npm install @vscode/vsce typescript -g
+
+      - name: Install git-loom (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL -o git-loom.tar.gz "https://github.com/narnaud/git-loom/releases/download/v${GIT_LOOM_VERSION}/git-loom-x86_64-unknown-linux-gnu.tar.gz"
+          tar xzf git-loom.tar.gz git-loom
+          sudo mv git-loom /usr/local/bin/
+          git-loom --version
+
+      - name: Install git-loom (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          curl -fsSL -o git-loom.tar.gz "https://github.com/narnaud/git-loom/releases/download/v${GIT_LOOM_VERSION}/git-loom-aarch64-apple-darwin.tar.gz"
+          tar xzf git-loom.tar.gz git-loom
+          sudo mv git-loom /usr/local/bin/
+          git-loom --version
+
+      - name: Configure git identity (needed by the test repos loom creates)
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+
+      - name: compile
+        run: npm run compile
+
+      - name: lint
+        run: npm run lint
+
+      - name: unit tests
+        run: npm run test:unit
+
+      - name: integration tests (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm test
+
+      - name: integration tests (macOS)
+        if: runner.os == 'macOS'
+        run: npm test
+
+      - name: vsce package
+        run: vsce package

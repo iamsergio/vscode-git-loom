@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: MIT
+# Creates the package
+
+name: Upload package as GitHub asset
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  release-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Use Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+      - name: Install dependencies
+        run: |
+          npm install --loglevel verbose
+          npm install @vscode/vsce typescript -g
+      - name: Package
+        run: |
+          vsce package
+
+      - name: Upload asset
+        run: |
+          sh upload_package.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

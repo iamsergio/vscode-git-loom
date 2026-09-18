@@ -1,0 +1,156 @@
+{
+  "name": "vscode-git-loom",
+  "displayName": "Git Loom",
+  "description": "Browse and reword a git-loom weave from a sidebar tree view",
+  "version": "0.1.0",
+  "publisher": "iamsergio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iamsergio/vscode-git-loom.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "license": "MIT",
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "tsc -p tsconfig.test.json && npm run lint",
+    "lint": "eslint src/ --max-warnings 0",
+    "test": "vscode-test",
+    "test:unit": "tsc -p tsconfig.test.json && mocha --ui tdd \"out/test/unit/**/*.test.js\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "format:fix": "prettier --write \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.20.2",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "eslint": "^10.10.0",
+    "mocha": "^12.0.1",
+    "prettier": "3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.0"
+  },
+  "keywords": [
+    "git",
+    "git-loom",
+    "loom"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gitLoom",
+          "title": "Git Loom",
+          "icon": "media/loom.svg"
+        }
+      ]
+    },
+    "views": {
+      "gitLoom": [
+        {
+          "id": "gitLoom.weave",
+          "name": "Git Loom"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "gitLoom.weave",
+        "contents": "Open a folder that contains a git-loom repository.",
+        "when": "workbenchState == empty"
+      }
+    ],
+    "commands": [
+      {
+        "command": "gitLoom.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.reword",
+        "title": "Reword...",
+        "icon": "$(edit)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.openFileDiff",
+        "title": "Open Changes",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.hideFiles",
+        "title": "Hide Files",
+        "icon": "$(eye)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.showFiles",
+        "title": "Show Files",
+        "icon": "$(eye-closed)",
+        "category": "Git Loom"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "gitLoom.refresh",
+          "when": "view == gitLoom.weave",
+          "group": "navigation@1"
+        },
+        {
+          "command": "gitLoom.hideFiles",
+          "when": "view == gitLoom.weave && gitLoom.showFiles",
+          "group": "navigation@2"
+        },
+        {
+          "command": "gitLoom.showFiles",
+          "when": "view == gitLoom.weave && !gitLoom.showFiles",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "gitLoom.reword",
+          "when": "view == gitLoom.weave && viewItem == commit",
+          "group": "inline"
+        },
+        {
+          "command": "gitLoom.reword",
+          "when": "view == gitLoom.weave && viewItem == commit",
+          "group": "1_modify"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "gitLoom.reword",
+          "when": "false"
+        },
+        {
+          "command": "gitLoom.openFileDiff",
+          "when": "false"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Git Loom",
+      "properties": {
+        "gitLoom.executable": {
+          "type": "string",
+          "default": "git-loom",
+          "description": "Path to the git-loom executable."
+        }
+      }
+    }
+  }
+}

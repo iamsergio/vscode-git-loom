@@ -1,0 +1,25 @@
+╭─ zz [local changes]
+│   aa  M a.txt
+│   lo  ⁕ loose.txt
+│
+●    08ce79a chore: loose commit on integration
+┊       08:0 A  l.txt
+│
+│╭─ ea [feat-a-stack]
+│●    81ed772 feat: stacked on a
+│┊      81:0 A  s.txt
+├╯
+│
+│╭─ fc [feat-c]
+│●    3143c55 feat: c
+│┊      31:0 A  c.txt
+├╯
+│
+│╭─ fa [feat-a]
+│●    162a27a feat: more a
+│┊      16:0 A  b.txt
+│●    b00f4f5 feat: add a (reworded)
+│┊      b0:0 A  a.txt
+├╯
+│
+● e509757 (upstream) [origin/main] init
