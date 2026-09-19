@@ -139,6 +139,111 @@ export function activate(context: vscode.ExtensionContext): void {
         }
       },
     ),
+    vscode.commands.registerCommand(
+      "gitLoom.unmergeBranch",
+      async (node: WeaveNode | undefined) => {
+        if (!node || node.kind !== "branch") {
+          return;
+        }
+        const name = node.section.names[0]?.name;
+        if (!name) {
+          return;
+        }
+        try {
+          await runLoom(
+            getExecutable(),
+            ["branch", "unmerge", name],
+            node.root,
+          );
+          provider.refresh();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          vscode.window.showErrorMessage(message);
+        }
+      },
+    ),
+    vscode.commands.registerCommand("gitLoom.newBranch", async () => {
+      let root: string;
+      try {
+        root = await resolveRepoRoot();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(message);
+        return;
+      }
+      const name = await vscode.window.showInputBox({
+        prompt: "New branch name",
+        validateInput: (value) =>
+          value.trim() === "" ? "Branch name cannot be empty" : undefined,
+      });
+      if (!name) {
+        return;
+      }
+      try {
+        await runLoom(getExecutable(), ["branch", "new", name.trim()], root);
+        provider.refresh();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(message);
+      }
+    }),
+    vscode.commands.registerCommand("gitLoom.mergeBranch", async () => {
+      let root: string;
+      try {
+        root = await resolveRepoRoot();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(message);
+        return;
+      }
+      try {
+        const [status, branchesOut, currentBranch] = await Promise.all([
+          currentStatusSource.getStatus(root),
+          runGit(["branch", "--format=%(refname:short)"], root),
+          runGit(["rev-parse", "--abbrev-ref", "HEAD"], root),
+        ]);
+        const woven = new Set(
+          status.branches.flatMap((b) => b.names.map((n) => n.name)),
+        );
+        const current = currentBranch.trim();
+        const candidates = branchesOut
+          .split(/\r?\n/)
+          .map((b) => b.trim())
+          .filter((b) => b !== "" && b !== current && !woven.has(b));
+        if (candidates.length === 0) {
+          vscode.window.showInformationMessage(
+            "No branches available to merge into the weave.",
+          );
+          return;
+        }
+        const picked = await vscode.window.showQuickPick(candidates, {
+          placeHolder: "Select a branch to merge into the weave",
+        });
+        if (!picked) {
+          return;
+        }
+        await runLoom(getExecutable(), ["branch", "merge", picked], root);
+        provider.refresh();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(message);
+      }
+    }),
+    vscode.commands.registerCommand(
+      "gitLoom.absorbFile",
+      async (node: WeaveNode | undefined) => {
+        if (!node || node.kind !== "file") {
+          return;
+        }
+        try {
+          await runLoom(getExecutable(), ["absorb", node.file.path], node.root);
+          provider.refresh();
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          vscode.window.showErrorMessage(message);
+        }
+      },
+    ),
     vscode.commands.registerCommand("gitLoom.update", async () => {
       let root: string;
       try {

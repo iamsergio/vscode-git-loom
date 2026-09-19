@@ -96,6 +96,30 @@
         "category": "Git Loom"
       },
       {
+        "command": "gitLoom.newBranch",
+        "title": "New Branch...",
+        "icon": "$(add)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.mergeBranch",
+        "title": "Merge Branch...",
+        "icon": "$(git-merge)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.unmergeBranch",
+        "title": "Unmerge",
+        "icon": "$(circle-slash)",
+        "category": "Git Loom"
+      },
+      {
+        "command": "gitLoom.absorbFile",
+        "title": "Absorb Changes",
+        "icon": "$(combine)",
+        "category": "Git Loom"
+      },
+      {
         "command": "gitLoom.update",
         "title": "Update",
         "icon": "$(cloud-download)",
@@ -152,6 +176,16 @@
           "command": "gitLoom.showFiles",
           "when": "view == gitLoom.weave && !gitLoom.showFiles",
           "group": "navigation@3"
+        },
+        {
+          "command": "gitLoom.newBranch",
+          "when": "view == gitLoom.weave",
+          "group": "2_branchops"
+        },
+        {
+          "command": "gitLoom.mergeBranch",
+          "when": "view == gitLoom.weave",
+          "group": "2_branchops"
         }
       ],
       "view/item/context": [
@@ -176,6 +210,16 @@
           "group": "1_modify"
         },
         {
+          "command": "gitLoom.unmergeBranch",
+          "when": "view == gitLoom.weave && viewItem == branch",
+          "group": "1_modify"
+        },
+        {
+          "command": "gitLoom.absorbFile",
+          "when": "view == gitLoom.weave && viewItem == file",
+          "group": "1_modify"
+        },
+        {
           "command": "gitLoom.copyCommitHash",
           "when": "view == gitLoom.weave && viewItem == commit",
           "group": "9_copy"
@@ -197,6 +241,14 @@
         },
         {
           "command": "gitLoom.dropBranch",
+          "when": "false"
+        },
+        {
+          "command": "gitLoom.unmergeBranch",
+          "when": "false"
+        },
+        {
+          "command": "gitLoom.absorbFile",
           "when": "false"
         },
         {
