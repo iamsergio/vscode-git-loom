@@ -5,8 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 
 Git Loom is a VS Code extension that shows a [git-loom](https://github.com/narnaud/git-loom) weave
-in a sidebar tree view and lets the user reword commits from an editor tab. No webview. See
-`PLAN.md` for the original design.
+in a sidebar tree view and drives loom mutations (reword, drop, branch new/merge/unmerge, absorb,
+update, …) from it. Reword is the one flow that opens an editor tab (full message editing, like
+`git commit --amend`); everything else is a direct `git-loom <subcommand>` call followed by a tree
+refresh. No webview. See `PLAN.md` for the original design.
 
 ## Architecture
 
@@ -30,7 +32,17 @@ are reallocated whenever other entities appear in the weave and are not stable a
 
 `src/tree/weaveTreeProvider.ts`, `src/reword/rewordController.ts`, `src/gitShowProvider.ts`, and
 `src/extension.ts` are the VS Code-facing layer (tree data provider, the reword-in-a-tab flow,
-the diff content provider, and activation wiring).
+the diff content provider, and activation wiring). Reword is the only command with a dedicated
+controller; every other `gitLoom.*` command (drop, branch new/merge/unmerge, absorb, update,
+copy hash/branch name, hide/show files) is registered inline in `extension.ts` as a thin
+`runLoom(...)` call plus `provider.refresh()`, wrapped to show `LoomError`/thrown messages via
+`vscode.window.showErrorMessage`. Follow that same shape for new commands rather than adding
+another controller class.
+
+`extension.ts` also owns background refresh: a `FileSystemWatcher` on
+`.git/{HEAD,index,refs/**,packed-refs}` plus `onDidSaveTextDocument` schedule a debounced
+`provider.refresh()` (`REFRESH_DEBOUNCE_MS`), skipped while the tree view isn't visible and
+caught up on when it becomes visible again.
 
 ## Commands
 
