@@ -38,6 +38,10 @@ suite("smoke", () => {
     assert.ok(commands.includes("gitLoom.update"));
     assert.ok(commands.includes("gitLoom.copyCommitHash"));
     assert.ok(commands.includes("gitLoom.copyBranchName"));
+    assert.ok(commands.includes("gitLoom.newBranch"));
+    assert.ok(commands.includes("gitLoom.mergeBranch"));
+    assert.ok(commands.includes("gitLoom.unmergeBranch"));
+    assert.ok(commands.includes("gitLoom.absorbFile"));
     assert.ok(commands.includes("gitLoom.openFileDiff"));
     assert.ok(commands.includes("gitLoom.hideFiles"));
     assert.ok(commands.includes("gitLoom.showFiles"));
