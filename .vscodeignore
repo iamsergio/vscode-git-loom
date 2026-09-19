@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+.vscode-test.js
 src/**
 .gitignore
 **/tsconfig.json
@@ -11,6 +12,7 @@ PLAN.md
 CLAUDE.md
 .pre-commit-config.yaml
 .github/
+.claude/
 .codespellrc
 .prettierrc
 .prettierignore
