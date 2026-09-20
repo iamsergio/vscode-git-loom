@@ -9,7 +9,8 @@ import { runGit, runLoom } from "./loom/runner";
 import { TextStatusSource } from "./loom/statusSource";
 import { RewordController } from "./reword/rewordController";
 import { WeaveDragAndDropController } from "./tree/weaveDragAndDropController";
-import { WeaveNode, WeaveTreeProvider } from "./tree/weaveTreeProvider";
+import { WeaveNode } from "./tree/weaveNode";
+import { WeaveTreeProvider } from "./tree/weaveTreeProvider";
 
 const REFRESH_DEBOUNCE_MS = 500;
 

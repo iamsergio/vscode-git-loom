@@ -8,22 +8,10 @@ import {
   UpstreamInfo,
 } from "../loom/model";
 import { LoomStatusSource } from "../loom/statusSource";
+import { WeaveNode } from "./weaveNode";
 
 /** Resolves the repo root to run loom/git in, or throws a LoomError to show as an error node. */
 export type RepoRootResolver = () => Promise<string>;
-
-export type WeaveNode =
-  | { kind: "error"; message: string }
-  | { kind: "integration"; commits: Commit[]; root: string }
-  | {
-      kind: "branch";
-      section: BranchSection;
-      stackedOnLabel?: string;
-      root: string;
-    }
-  | { kind: "upstream"; info: UpstreamInfo }
-  | { kind: "commit"; commit: Commit; branchNames: string[]; root: string }
-  | { kind: "file"; commit: Commit; file: CommitFile; root: string };
 
 export class WeaveTreeProvider implements vscode.TreeDataProvider<WeaveNode> {
   private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<
