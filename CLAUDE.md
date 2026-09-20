@@ -65,7 +65,7 @@ npm test                     # VS Code integration tests (@vscode/test-cli)
 ./run_manual_test.sh         # packages, builds a scratch git-loom repo, opens VS Code against it
 ```
 
-Run `./test.sh` before considering a change done.
+Ask user to run `./verify.sh` before considering a change done. User will give feedback, to save tokens.
 
 ## Conventions
 
