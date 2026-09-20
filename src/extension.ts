@@ -8,6 +8,7 @@ import { LoomError } from "./loom/model";
 import { runGit, runLoom } from "./loom/runner";
 import { TextStatusSource } from "./loom/statusSource";
 import { RewordController } from "./reword/rewordController";
+import { WeaveDragAndDropController } from "./tree/weaveDragAndDropController";
 import { WeaveNode, WeaveTreeProvider } from "./tree/weaveTreeProvider";
 
 const REFRESH_DEBOUNCE_MS = 500;
@@ -44,6 +45,9 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const treeView = vscode.window.createTreeView("gitLoom.weave", {
     treeDataProvider: provider,
+    dragAndDropController: new WeaveDragAndDropController(getExecutable, () =>
+      provider.refresh(),
+    ),
   });
   context.subscriptions.push(treeView);
 

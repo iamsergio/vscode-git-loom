@@ -6,7 +6,8 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { runLoom } from "../../loom/runner";
 import { TextStatusSource } from "../../loom/statusSource";
-import { WeaveTreeProvider } from "../../tree/weaveTreeProvider";
+import { buildFoldArgs } from "../../tree/weaveDragAndDropController";
+import { WeaveNode, WeaveTreeProvider } from "../../tree/weaveTreeProvider";
 
 function loomAvailable(): boolean {
   try {
@@ -146,6 +147,127 @@ suite("smoke", () => {
     // Toggling back on restores them.
     provider.setShowFiles(true);
     assert.strictEqual((await provider.getChildren(commitNodesNoFiles[0])).length, 1);
+  });
+
+  test("buildFoldArgs: commit target moves above it, never plain fold", () => {
+    const commitTarget: WeaveNode = {
+      kind: "commit",
+      commit: { hash: "target1", subject: "t", files: [] },
+      branchNames: [],
+      root: "/repo",
+    };
+    assert.deepStrictEqual(buildFoldArgs(["src1"], commitTarget), [
+      "fold",
+      "src1",
+      "--above",
+      "target1",
+    ]);
+    assert.deepStrictEqual(buildFoldArgs(["src1", "src2"], commitTarget), [
+      "fold",
+      "src1",
+      "src2",
+      "--above",
+      "target1",
+    ]);
+    // Dropping a commit onto itself is a no-op, not a self-fold.
+    assert.strictEqual(buildFoldArgs(["target1"], commitTarget), undefined);
+  });
+
+  test("buildFoldArgs: branch target moves to the top of that branch by name", () => {
+    const branchTarget: WeaveNode = {
+      kind: "branch",
+      section: {
+        names: [{ name: "feat-a" }],
+        commits: [],
+        stackedOnNext: false,
+      },
+      root: "/repo",
+    };
+    assert.deepStrictEqual(buildFoldArgs(["src1"], branchTarget), [
+      "fold",
+      "src1",
+      "feat-a",
+    ]);
+  });
+
+  test("buildFoldArgs: integration target moves above its topmost loose commit", () => {
+    const integrationTarget: WeaveNode = {
+      kind: "integration",
+      commits: [{ hash: "loose1", subject: "l", files: [] }],
+      root: "/repo",
+    };
+    assert.deepStrictEqual(buildFoldArgs(["src1"], integrationTarget), [
+      "fold",
+      "src1",
+      "--above",
+      "loose1",
+    ]);
+  });
+
+  test("buildFoldArgs: file/upstream/error targets are not droppable", () => {
+    const fileTarget: WeaveNode = {
+      kind: "file",
+      commit: { hash: "c1", subject: "c", files: [] },
+      file: { status: "M", path: "a.txt" },
+      root: "/repo",
+    };
+    const upstreamTarget: WeaveNode = {
+      kind: "upstream",
+      info: { label: "origin/main", baseHash: "b1", baseSubject: "init", commitsAhead: 0 },
+    };
+    const errorTarget: WeaveNode = { kind: "error", message: "oops" };
+    assert.strictEqual(buildFoldArgs(["src1"], fileTarget), undefined);
+    assert.strictEqual(buildFoldArgs(["src1"], upstreamTarget), undefined);
+    assert.strictEqual(buildFoldArgs(["src1"], errorTarget), undefined);
+  });
+
+  test("drag-move a commit across branches via fold --above against a real loom repo", async function () {
+    if (!loomAvailable()) {
+      this.skip();
+      return;
+    }
+    this.timeout(30000);
+
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "vscode-git-loom-dnd-"));
+    const originDir = path.join(tmp, "origin.git");
+    const demoDir = path.join(tmp, "demo");
+
+    sh("git", ["init", "-q", "--bare", originDir], tmp);
+    sh("git", ["clone", "-q", originDir, demoDir], tmp);
+    sh("git", ["config", "user.email", "test@example.com"], demoDir);
+    sh("git", ["config", "user.name", "Test"], demoDir);
+    sh("git", ["commit", "-q", "--allow-empty", "-m", "init"], demoDir);
+    sh("git", ["push", "-q", "origin", "HEAD:main"], demoDir);
+    sh("git", ["branch", "-u", "origin/main"], demoDir);
+    await runLoom("git-loom", ["init"], demoDir);
+
+    fs.writeFileSync(path.join(demoDir, "a.txt"), "a\n");
+    await runLoom("git-loom", ["commit", "-b", "feat-a", "-m", "feat: a", "a.txt"], demoDir);
+    fs.writeFileSync(path.join(demoDir, "b.txt"), "b\n");
+    await runLoom("git-loom", ["commit", "-b", "feat-b", "-m", "feat: b", "b.txt"], demoDir);
+
+    const source = new TextStatusSource("git-loom");
+    const status = await source.getStatus(demoDir);
+    const branchA = status.branches.find((b) => b.names.some((n) => n.name === "feat-a"));
+    const branchB = status.branches.find((b) => b.names.some((n) => n.name === "feat-b"));
+    const sourceHash = branchA!.commits[0].hash;
+    const targetNode: WeaveNode = {
+      kind: "branch",
+      section: branchB!,
+      root: demoDir,
+    };
+
+    const args = buildFoldArgs([sourceHash], targetNode);
+    assert.ok(args);
+    await runLoom("git-loom", args!, demoDir);
+
+    const statusAfter = await source.getStatus(demoDir);
+    const branchAAfter = statusAfter.branches.find((b) => b.names.some((n) => n.name === "feat-a"));
+    const branchBAfter = statusAfter.branches.find((b) => b.names.some((n) => n.name === "feat-b"));
+    assert.strictEqual(branchAAfter?.commits.length, 0);
+    assert.strictEqual(branchBAfter?.commits.length, 2);
+    assert.strictEqual(branchBAfter?.commits[0].subject, "feat: a");
+    assert.strictEqual(branchBAfter?.commits[1].subject, "feat: b");
   });
 
   test("WeaveTreeProvider shows an error node when the repo root resolver throws", async () => {
