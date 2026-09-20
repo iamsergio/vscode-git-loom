@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { runLoom } from "../loom/runner";
-import { WeaveNode } from "./weaveTreeProvider";
+import { buildFoldArgs, WeaveNode } from "./weaveNode";
 
 const MIME_TYPE = "application/vnd.code.tree.gitloom.weave";
 
@@ -62,34 +62,5 @@ export class WeaveDragAndDropController implements vscode.TreeDragAndDropControl
       const message = err instanceof Error ? err.message : String(err);
       vscode.window.showErrorMessage(message);
     }
-  }
-}
-
-/** Builds the `fold` args moving `hashes` onto `target`, or undefined if `target` can't be dropped on. */
-export function buildFoldArgs(
-  hashes: string[],
-  target: WeaveNode,
-): string[] | undefined {
-  switch (target.kind) {
-    case "commit":
-      if (hashes.includes(target.commit.hash)) {
-        return undefined;
-      }
-      return ["fold", ...hashes, "--above", target.commit.hash];
-    case "branch": {
-      const name = target.section.names[0]?.name;
-      return name ? ["fold", ...hashes, name] : undefined;
-    }
-    case "integration": {
-      const anchor = target.commits[0];
-      if (!anchor || hashes.includes(anchor.hash)) {
-        return undefined;
-      }
-      return ["fold", ...hashes, "--above", anchor.hash];
-    }
-    case "upstream":
-    case "file":
-    case "error":
-      return undefined;
   }
 }
