@@ -25,9 +25,9 @@ const UPSTREAM_LINE = /^● ([0-9a-f]{4,40}) \(upstream\) \[([^\]]+)\] ?(.*)$/;
 const UPSTREAM_AHEAD_LINE = /^│●\s+\[([^\]]+)\] ⏫ (\d+) new commits?$/;
 const UPSTREAM_BASE_LINE = /^├╯ ([0-9a-f]{4,40}) \(common base\) \S+ (.*)$/;
 const BRANCH_HEADER = /^│[╭├]─ \S+ \[([^\]]+)\](?: ([✓↑✗]))?$/;
-const BRANCH_COMMIT = /^│●\s+([0-9a-f]{4,40}) (.*)$/;
+const BRANCH_COMMIT = /^│●\s+\S+\s+(.*) ([0-9a-f]{4,40})$/;
 const BRANCH_FILE = /^│┊\s+\S+:\d+ (.)(.) (.+)$/;
-const LOOSE_COMMIT = /^●\s+([0-9a-f]{4,40}) (.*)$/;
+const LOOSE_COMMIT = /^●\s+\S+\s+(.*) ([0-9a-f]{4,40})$/;
 const LOOSE_FILE = /^┊\s+\S+:\d+ (.)(.) (.+)$/;
 
 export function parseStatusText(text: string): LoomStatus {
@@ -112,7 +112,7 @@ export function parseStatusText(text: string): LoomStatus {
     }
 
     if ((m = line.match(BRANCH_COMMIT))) {
-      current?.commits.push({ hash: m[1], subject: m[2], files: [] });
+      current?.commits.push({ hash: m[2], subject: m[1], files: [] });
       continue;
     }
 
@@ -123,7 +123,7 @@ export function parseStatusText(text: string): LoomStatus {
     }
 
     if ((m = line.match(LOOSE_COMMIT))) {
-      looseCommits.push({ hash: m[1], subject: m[2], files: [] });
+      looseCommits.push({ hash: m[2], subject: m[1], files: [] });
       continue;
     }
 

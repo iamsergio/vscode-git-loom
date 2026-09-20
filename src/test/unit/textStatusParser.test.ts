@@ -107,21 +107,21 @@ suite("textStatusParser", () => {
 
   test("remote marker ✓ maps to 'synced'", () => {
     const status = parseStatusText(
-      ["│╭─ fc [feat-c] ✓", "│●    3143c55 feat: c", "├╯"].join("\n"),
+      ["│╭─ fc [feat-c] ✓", "│●    31   feat: c 3143c55", "├╯"].join("\n"),
     );
     assert.strictEqual(status.branches[0].names[0].remote, "synced");
   });
 
   test("remote marker ↑ maps to 'ahead'", () => {
     const status = parseStatusText(
-      ["│╭─ fc [feat-c] ↑", "│●    3143c55 feat: c", "├╯"].join("\n"),
+      ["│╭─ fc [feat-c] ↑", "│●    31   feat: c 3143c55", "├╯"].join("\n"),
     );
     assert.strictEqual(status.branches[0].names[0].remote, "ahead");
   });
 
   test("remote marker ✗ maps to 'gone'", () => {
     const status = parseStatusText(
-      ["│╭─ fc [feat-c] ✗", "│●    3143c55 feat: c", "├╯"].join("\n"),
+      ["│╭─ fc [feat-c] ✗", "│●    31   feat: c 3143c55", "├╯"].join("\n"),
     );
     assert.strictEqual(status.branches[0].names[0].remote, "gone");
   });
@@ -129,7 +129,7 @@ suite("textStatusParser", () => {
   test("a subject containing brackets and ● is preserved verbatim", () => {
     const subject = "feat: handle [brackets] and ● dots in messages";
     const status = parseStatusText(
-      ["│╭─ fc [feat-c]", `│●    3143c55 ${subject}`, "├╯"].join("\n"),
+      ["│╭─ fc [feat-c]", `│●    31   ${subject} 3143c55`, "├╯"].join("\n"),
     );
     assert.strictEqual(status.branches[0].commits[0].subject, subject);
   });
