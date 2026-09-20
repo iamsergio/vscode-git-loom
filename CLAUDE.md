@@ -30,13 +30,18 @@ unit-testable with plain mocha (`npm run test:unit`), independent of the VS Code
 **Identify commits by their abbreviated hash, never by loom's short IDs** (`fa`, `81`, …) — those
 are reallocated whenever other entities appear in the weave and are not stable across calls.
 
-`src/tree/weaveTreeProvider.ts`, `src/reword/rewordController.ts`, `src/gitShowProvider.ts`, and
-`src/extension.ts` are the VS Code-facing layer (tree data provider, the reword-in-a-tab flow,
-the diff content provider, and activation wiring). Reword is the only command with a dedicated
-controller; every other `gitLoom.*` command (drop, branch new/merge/unmerge, absorb, update,
-copy hash/branch name, hide/show files) is registered inline in `extension.ts` as a thin
-`runLoom(...)` call plus `provider.refresh()`, wrapped to show `LoomError`/thrown messages via
-`vscode.window.showErrorMessage`. Follow that same shape for new commands rather than adding
+`src/tree/weaveTreeProvider.ts`, `src/tree/weaveDragAndDropController.ts`,
+`src/reword/rewordController.ts`, `src/gitShowProvider.ts`, and `src/extension.ts` are the VS
+Code-facing layer (tree data provider, drag-and-drop-to-move-commits, the reword-in-a-tab flow,
+the diff content provider, and activation wiring). `weaveDragAndDropController.ts` moves commits
+by dragging: it only accepts drags where every source is a `commit` node, and always moves via
+`git-loom fold <source...> --above <target>` (or `fold <source...> <branchName>` when dropped on
+a branch) — never plain `fold <source> <commit>`, which fixups/squashes instead of moving. Reword
+is the only command with a dedicated controller; every other `gitLoom.*` command (drop, branch
+new/merge/unmerge, absorb, update, copy hash/branch name, hide/show files) is registered inline in
+`extension.ts` as a thin `runLoom(...)` call plus `provider.refresh()`, wrapped to show
+`LoomError`/thrown messages via `vscode.window.showErrorMessage`. Follow that same shape for new
+commands rather than adding
 another controller class.
 
 `extension.ts` also owns background refresh: a `FileSystemWatcher` on
