@@ -9,7 +9,7 @@ function loadFixture(name: string): string {
 }
 
 suite("textStatusParser", () => {
-  test("simple.txt: loose commit, 3 branches, upstream with 0 ahead, zz skipped", () => {
+  test("simple.txt: loose commit, 3 branches, upstream with 0 ahead, zz parsed", () => {
     const status = parseStatusText(loadFixture("simple.txt"));
 
     assert.strictEqual(status.looseCommits.length, 1);
@@ -36,8 +36,12 @@ suite("textStatusParser", () => {
     assert.strictEqual(status.upstream?.baseSubject, "init");
     assert.strictEqual(status.upstream?.commitsAhead, 0);
 
-    // Local changes (zz) are skipped entirely: a.txt only exists as a working-tree
-    // change, never as a committed file.
+    assert.deepStrictEqual(status.localChanges, [
+      { index: " ", worktree: "M", path: "a.txt" },
+      { index: "?", worktree: "?", path: "loose.txt" },
+    ]);
+
+    // zz files must not leak into commits: a.txt is only a working-tree change here.
     for (const branch of status.branches) {
       for (const commit of branch.commits) {
         assert.ok(
@@ -96,13 +100,71 @@ suite("textStatusParser", () => {
     assert.strictEqual(empty?.stackedOnNext, false);
   });
 
-  test("clean.txt: 'no changes' inside zz is skipped without error", () => {
+  test("clean.txt: 'no changes' inside zz gives no local changes", () => {
     const status = parseStatusText(loadFixture("clean.txt"));
+
+    assert.deepStrictEqual(status.localChanges, []);
 
     assert.strictEqual(status.looseCommits.length, 1);
     assert.strictEqual(status.branches.length, 4); // feat-a-stack, feat-c, feat-stack, [feat-a-alias,feat-a]
     assert.ok(status.upstream);
     assert.strictEqual(status.upstream?.commitsAhead, 1);
+  });
+
+  test("local-changes.txt: every staged/unstaged/untracked combination", () => {
+    const status = parseStatusText(loadFixture("local-changes.txt"));
+
+    assert.deepStrictEqual(status.localChanges, [
+      { index: " ", worktree: "M", path: "a.txt" },
+      { index: "M", worktree: " ", path: "b.txt" },
+      { index: "M", worktree: "M", path: "c.txt" },
+      { index: "D", worktree: " ", path: "d.txt" },
+      { index: "A", worktree: " ", path: "dir with space/staged.txt" },
+      { index: " ", worktree: "D", path: "e.txt" },
+      { index: "A", worktree: " ", path: "new.txt" },
+      // loom doesn't detect renames: a staged `git mv` shows as a delete plus an add
+      { index: "D", worktree: " ", path: "r.txt" },
+      { index: "A", worktree: " ", path: "renamed.txt" },
+      { index: "?", worktree: "?", path: "dir with space/extra.txt" },
+      { index: "?", worktree: "?", path: "sub/" },
+      { index: "?", worktree: "?", path: "untracked.txt" },
+    ]);
+
+    // The rest of the weave still parses after a populated zz block.
+    assert.strictEqual(status.looseCommits.length, 1);
+    assert.strictEqual(status.looseCommits[0].hash, "4c1020c");
+    assert.deepStrictEqual(status.looseCommits[0].files, [{ status: "A", path: "l.txt" }]);
+    assert.strictEqual(status.branches.length, 1);
+    assert.strictEqual(status.branches[0].names[0].name, "feat-a");
+    assert.strictEqual(status.branches[0].commits[0].hash, "840d21c");
+    assert.strictEqual(status.upstream?.baseHash, "515c3f5");
+  });
+
+  test("local-changes-only.txt: zz directly on top of upstream", () => {
+    const status = parseStatusText(loadFixture("local-changes-only.txt"));
+
+    // Same working tree as local-changes.txt, just without the loose commit and branch.
+    assert.deepStrictEqual(
+      status.localChanges,
+      parseStatusText(loadFixture("local-changes.txt")).localChanges,
+    );
+    assert.deepStrictEqual(status.looseCommits, []);
+    assert.deepStrictEqual(status.branches, []);
+    assert.strictEqual(status.upstream?.baseHash, "515c3f5");
+    assert.strictEqual(status.upstream?.commitsAhead, 0);
+  });
+
+  test("output without a zz block gives no local changes", () => {
+    const status = parseStatusText(
+      ["│╭─ fc [feat-c]", "│●    31a  feat: c 3143c55", "├╯", "│", "● e509757 (upstream) [origin/main] init"].join("\n"),
+    );
+    assert.deepStrictEqual(status.localChanges, []);
+    assert.strictEqual(status.branches.length, 1);
+  });
+
+  test("a zz file named like the 'no changes' marker is still a change", () => {
+    const status = parseStatusText(["╭─ zz [local changes]", "│   nc  M no changes", "│"].join("\n"));
+    assert.deepStrictEqual(status.localChanges, [{ index: " ", worktree: "M", path: "no changes" }]);
   });
 
   test("remote marker ✓ maps to 'synced'", () => {
@@ -136,6 +198,7 @@ suite("textStatusParser", () => {
 
   test("empty input produces an empty status", () => {
     const status = parseStatusText("");
+    assert.deepStrictEqual(status.localChanges, []);
     assert.deepStrictEqual(status.looseCommits, []);
     assert.deepStrictEqual(status.branches, []);
     assert.strictEqual(status.upstream, undefined);

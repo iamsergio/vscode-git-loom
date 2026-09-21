@@ -1,0 +1,15 @@
+╭─ zz [local changes]
+│   aa  M a.txt
+│   bb M  b.txt
+│   cc MM c.txt
+│   dd D  d.txt
+│   st A  dir with space/staged.txt
+│   ee  D e.txt
+│   ne A  new.txt
+│   rr D  r.txt
+│   re A  renamed.txt
+│   ex  ⁕ dir with space/extra.txt
+│   su  ⁕ sub/
+│   un  ⁕ untracked.txt
+│
+● 515c3f5 (upstream) [origin/main] init
