@@ -73,4 +73,12 @@ suite("buildFoldArgs", () => {
     assert.strictEqual(buildFoldArgs(["src1"], upstreamTarget), undefined);
     assert.strictEqual(buildFoldArgs(["src1"], errorTarget), undefined);
   });
+
+  test("local changes and their files are not droppable", () => {
+    const change = { index: " ", worktree: "M", path: "a.txt" };
+    const localChangesTarget: WeaveNode = { kind: "localChanges", changes: [change], root: "/repo" };
+    const localFileTarget: WeaveNode = { kind: "localFile", change, root: "/repo" };
+    assert.strictEqual(buildFoldArgs(["src1"], localChangesTarget), undefined);
+    assert.strictEqual(buildFoldArgs(["src1"], localFileTarget), undefined);
+  });
 });

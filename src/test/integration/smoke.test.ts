@@ -44,6 +44,7 @@ suite("smoke", () => {
     assert.ok(commands.includes("gitLoom.unmergeBranch"));
     assert.ok(commands.includes("gitLoom.absorbFile"));
     assert.ok(commands.includes("gitLoom.openFileDiff"));
+    assert.ok(commands.includes("gitLoom.openWorkingTreeDiff"));
     assert.ok(commands.includes("gitLoom.hideFiles"));
     assert.ok(commands.includes("gitLoom.showFiles"));
   });
@@ -147,6 +148,52 @@ suite("smoke", () => {
     // Toggling back on restores them.
     provider.setShowFiles(true);
     assert.strictEqual((await provider.getChildren(commitNodesNoFiles[0])).length, 1);
+  });
+
+  test("WeaveTreeProvider shows local changes first, with a working-tree diff per file", async function () {
+    if (!loomAvailable()) {
+      this.skip();
+      return;
+    }
+    this.timeout(30000);
+
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "vscode-git-loom-zz-"));
+    const originDir = path.join(tmp, "origin.git");
+    const demoDir = path.join(tmp, "demo");
+
+    sh("git", ["init", "-q", "--bare", originDir], tmp);
+    sh("git", ["clone", "-q", originDir, demoDir], tmp);
+    sh("git", ["config", "user.email", "test@example.com"], demoDir);
+    sh("git", ["config", "user.name", "Test"], demoDir);
+    sh("git", ["commit", "-q", "--allow-empty", "-m", "init"], demoDir);
+    sh("git", ["push", "-q", "origin", "HEAD:main"], demoDir);
+    sh("git", ["branch", "-u", "origin/main"], demoDir);
+    await runLoom("git-loom", ["init"], demoDir);
+
+    const provider = new WeaveTreeProvider(new TextStatusSource("git-loom"), async () => demoDir);
+
+    // Clean: the node is still there, but empty.
+    let roots = await provider.getChildren();
+    assert.strictEqual(roots[0].kind, "localChanges");
+    let item = provider.getTreeItem(roots[0]);
+    assert.strictEqual(item.description, "no changes");
+    assert.strictEqual(item.collapsibleState, vscode.TreeItemCollapsibleState.None);
+
+    fs.writeFileSync(path.join(demoDir, "new.txt"), "new\n");
+    roots = await provider.getChildren();
+    assert.strictEqual(roots[0].kind, "localChanges");
+    item = provider.getTreeItem(roots[0]);
+    assert.strictEqual(item.contextValue, "localChanges");
+    assert.strictEqual(item.collapsibleState, vscode.TreeItemCollapsibleState.Expanded);
+
+    const fileNodes = await provider.getChildren(roots[0]);
+    assert.strictEqual(fileNodes.length, 1);
+    const fileItem = provider.getTreeItem(fileNodes[0]);
+    assert.strictEqual(fileItem.contextValue, "localFile");
+    assert.strictEqual(fileItem.label, "new.txt");
+    assert.strictEqual(fileItem.description, "??");
+    assert.strictEqual(fileItem.command?.command, "gitLoom.openWorkingTreeDiff");
+    assert.deepStrictEqual(fileItem.command?.arguments, [demoDir, "new.txt"]);
   });
 
   test("drag-move a commit across branches via fold --above against a real loom repo", async function () {

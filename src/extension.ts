@@ -3,6 +3,7 @@ import {
   GIT_SHOW_SCHEME,
   GitShowProvider,
   openFileDiff,
+  openWorkingTreeDiff,
 } from "./gitShowProvider";
 import { LoomError } from "./loom/model";
 import { runGit, runLoom } from "./loom/runner";
@@ -302,6 +303,17 @@ export function activate(context: vscode.ExtensionContext): void {
         }
       },
     ),
+    vscode.commands.registerCommand(
+      "gitLoom.openWorkingTreeDiff",
+      async (root: string, path: string) => {
+        try {
+          await openWorkingTreeDiff(root, path);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          vscode.window.showErrorMessage(message);
+        }
+      },
+    ),
     vscode.commands.registerCommand("gitLoom.hideFiles", () => {
       provider.setShowFiles(false);
       setShowFilesContext(false);
@@ -353,6 +365,25 @@ export function activate(context: vscode.ExtensionContext): void {
       watcher.onDidCreate(scheduleRefresh),
       watcher.onDidDelete(scheduleRefresh),
       vscode.workspace.onDidSaveTextDocument(scheduleRefresh),
+    );
+
+    // Working-tree files created/deleted outside the editor (untracked files in zz).
+    // .git/ is covered above; ignoring it here keeps lock-file churn from refreshing.
+    const worktreeWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(folder, "**/*"),
+      false,
+      true,
+      false,
+    );
+    const onWorktreeChange = (uri: vscode.Uri): void => {
+      if (!/[\\/]\.git([\\/]|$)/.test(uri.fsPath)) {
+        scheduleRefresh();
+      }
+    };
+    context.subscriptions.push(
+      worktreeWatcher,
+      worktreeWatcher.onDidCreate(onWorktreeChange),
+      worktreeWatcher.onDidDelete(onWorktreeChange),
     );
   }
 

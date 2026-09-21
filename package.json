@@ -143,6 +143,11 @@
         "category": "Git Loom"
       },
       {
+        "command": "gitLoom.openWorkingTreeDiff",
+        "title": "Open Changes",
+        "category": "Git Loom"
+      },
+      {
         "command": "gitLoom.hideFiles",
         "title": "Hide Files",
         "icon": "$(eye)",
@@ -261,6 +266,10 @@
         },
         {
           "command": "gitLoom.openFileDiff",
+          "when": "false"
+        },
+        {
+          "command": "gitLoom.openWorkingTreeDiff",
           "when": "false"
         }
       ]

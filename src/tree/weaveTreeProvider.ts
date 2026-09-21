@@ -4,6 +4,7 @@ import {
   BranchSection,
   Commit,
   CommitFile,
+  LocalChange,
   LoomError,
   UpstreamInfo,
 } from "../loom/model";
@@ -46,6 +47,10 @@ export class WeaveTreeProvider implements vscode.TreeDataProvider<WeaveNode> {
     switch (element.kind) {
       case "error":
         return errorItem(element.message);
+      case "localChanges":
+        return localChangesItem(element.changes);
+      case "localFile":
+        return localFileItem(element);
       case "integration":
         return integrationItem(element);
       case "branch":
@@ -64,6 +69,12 @@ export class WeaveTreeProvider implements vscode.TreeDataProvider<WeaveNode> {
       return this.rootChildren();
     }
     switch (element.kind) {
+      case "localChanges":
+        return element.changes.map((change) => ({
+          kind: "localFile",
+          change,
+          root: element.root,
+        }));
       case "integration":
         return element.commits.map((commit) => ({
           kind: "commit",
@@ -88,6 +99,7 @@ export class WeaveTreeProvider implements vscode.TreeDataProvider<WeaveNode> {
           file,
           root: element.root,
         }));
+      case "localFile":
       case "upstream":
       case "file":
       case "error":
@@ -105,7 +117,9 @@ export class WeaveTreeProvider implements vscode.TreeDataProvider<WeaveNode> {
 
     try {
       const status = await this.statusSource.getStatus(root);
-      const nodes: WeaveNode[] = [];
+      const nodes: WeaveNode[] = [
+        { kind: "localChanges", changes: status.localChanges, root },
+      ];
 
       if (status.looseCommits.length > 0) {
         nodes.push({ kind: "integration", commits: status.looseCommits, root });
@@ -143,6 +157,75 @@ function errorItem(message: string): vscode.TreeItem {
   );
   item.iconPath = new vscode.ThemeIcon("warning");
   item.contextValue = "error";
+  return item;
+}
+
+function localChangesItem(changes: LocalChange[]): vscode.TreeItem {
+  const item = new vscode.TreeItem(
+    "Local changes",
+    changes.length > 0
+      ? vscode.TreeItemCollapsibleState.Expanded
+      : vscode.TreeItemCollapsibleState.None,
+  );
+  item.iconPath = new vscode.ThemeIcon("diff");
+  item.contextValue = "localChanges";
+  item.description =
+    changes.length > 0
+      ? `${changes.length} file${changes.length === 1 ? "" : "s"}`
+      : "no changes";
+  return item;
+}
+
+const STATUS_NAME: Record<string, string> = {
+  M: "modified",
+  A: "added",
+  D: "deleted",
+  R: "renamed",
+  C: "copied",
+  T: "type changed",
+  U: "unmerged",
+};
+
+function localFileItem(element: {
+  change: LocalChange;
+  root: string;
+}): vscode.TreeItem {
+  const { change, root } = element;
+  const untracked = change.index === "?";
+  const isDir = change.path.endsWith("/");
+  const resourceUri = vscode.Uri.joinPath(vscode.Uri.file(root), change.path);
+  const item = new vscode.TreeItem(
+    resourceUri,
+    vscode.TreeItemCollapsibleState.None,
+  );
+  item.label = path.basename(change.path);
+  const status = untracked ? "??" : `${change.index}${change.worktree}`;
+  const dir = path.dirname(change.path);
+  item.description = dir === "." ? status : `${dir} · ${status}`;
+  const tooltip = [change.path];
+  if (untracked) {
+    tooltip.push("untracked");
+  } else {
+    if (change.index !== " ") {
+      tooltip.push(`staged: ${STATUS_NAME[change.index] ?? change.index}`);
+    }
+    if (change.worktree !== " ") {
+      tooltip.push(
+        `unstaged: ${STATUS_NAME[change.worktree] ?? change.worktree}`,
+      );
+    }
+  }
+  item.tooltip = tooltip.join("\n");
+  item.contextValue = "localFile";
+  if (isDir) {
+    item.iconPath = vscode.ThemeIcon.Folder;
+  } else {
+    item.command = {
+      command: "gitLoom.openWorkingTreeDiff",
+      title: "Open Changes",
+      arguments: [root, change.path],
+    };
+  }
   return item;
 }
 

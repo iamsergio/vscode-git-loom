@@ -4,10 +4,18 @@
  * and buildFoldArgs's tests get dragged into the slow @vscode/test-cli integration suite.
  */
 
-import { BranchSection, Commit, CommitFile, UpstreamInfo } from "../loom/model";
+import {
+  BranchSection,
+  Commit,
+  CommitFile,
+  LocalChange,
+  UpstreamInfo,
+} from "../loom/model";
 
 export type WeaveNode =
   | { kind: "error"; message: string }
+  | { kind: "localChanges"; changes: LocalChange[]; root: string }
+  | { kind: "localFile"; change: LocalChange; root: string }
   | { kind: "integration"; commits: Commit[]; root: string }
   | {
       kind: "branch";
@@ -41,6 +49,8 @@ export function buildFoldArgs(
       }
       return ["fold", ...hashes, "--above", anchor.hash];
     }
+    case "localChanges":
+    case "localFile":
     case "upstream":
     case "file":
     case "error":
