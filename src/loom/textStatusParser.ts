@@ -15,12 +15,17 @@
 import {
   BranchSection,
   Commit,
+  LocalChange,
   LoomStatus,
   RemoteState,
   UpstreamInfo,
 } from "./model";
 
 const ZZ_HEADER = /^╭─ \S+ \[local changes\]$/;
+const ZZ_NO_CHANGES = /^│\s+no changes$/;
+// "│   aa  M a.txt": short ID, then porcelain-style XY; untracked is " ⁕" instead of "??".
+const ZZ_FILE = /^│\s+\S+ (.)(.) (.+)$/;
+const UNTRACKED_MARKER = "⁕";
 const UPSTREAM_LINE = /^● ([0-9a-f]{4,40}) \(upstream\) \[([^\]]+)\] ?(.*)$/;
 const UPSTREAM_AHEAD_LINE = /^│●\s+\[([^\]]+)\] ⏫ (\d+) new commits?$/;
 const UPSTREAM_BASE_LINE = /^├╯ ([0-9a-f]{4,40}) \(common base\) \S+ (.*)$/;
@@ -33,6 +38,7 @@ const LOOSE_COMMIT = /^●\s+\S+\s+(.*) ([0-9a-f]{4,40})$/;
 const LOOSE_FILE = /^┊\s+\S+:\d+ (.)(.) (.+)$/;
 
 export function parseStatusText(text: string): LoomStatus {
+  const localChanges: LocalChange[] = [];
   const looseCommits: Commit[] = [];
   const branches: BranchSection[] = [];
   let current: BranchSection | undefined;
@@ -50,8 +56,17 @@ export function parseStatusText(text: string): LoomStatus {
 
   for (const line of text.split(/\r?\n/)) {
     if (inZZBlock) {
+      let zz: RegExpMatchArray | null;
       if (line === "│") {
         inZZBlock = false;
+      } else if (ZZ_NO_CHANGES.test(line)) {
+        // clean working tree
+      } else if ((zz = line.match(ZZ_FILE))) {
+        localChanges.push(
+          zz[2] === UNTRACKED_MARKER
+            ? { index: "?", worktree: "?", path: zz[3] }
+            : { index: zz[1], worktree: zz[2], path: zz[3] },
+        );
       }
       continue;
     }
@@ -154,7 +169,7 @@ export function parseStatusText(text: string): LoomStatus {
 
   closeCurrent(false); // safety net in case a section was left open
 
-  return { looseCommits, branches, upstream };
+  return { localChanges, looseCommits, branches, upstream };
 }
 
 function firstNonSpace(a: string, b: string): string {

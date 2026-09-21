@@ -1,0 +1,23 @@
+╭─ zz [local changes]
+│   aa  M a.txt
+│   bb M  b.txt
+│   cc MM c.txt
+│   dd D  d.txt
+│   st A  dir with space/staged.txt
+│   ee  D e.txt
+│   ne A  new.txt
+│   rr D  r.txt
+│   re A  renamed.txt
+│   ex  ⁕ dir with space/extra.txt
+│   su  ⁕ sub/
+│   un  ⁕ untracked.txt
+│
+●    xlk  chore: loose commit on integration 4c1020c
+┊       xlk:0 A  l.txt
+│
+│╭─ fa [feat-a]
+│●    lyk  feat: a 840d21c
+│┊      lyk:0 A  f.txt
+├╯
+│
+● 515c3f5 (upstream) [origin/main] init
