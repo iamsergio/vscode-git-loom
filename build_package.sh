@@ -30,4 +30,4 @@ echo "Compiling..."
 npm run compile
 
 echo "vsce package..."
-vsce package
+npm run package
