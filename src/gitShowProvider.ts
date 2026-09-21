@@ -49,6 +49,27 @@ export async function openFileDiff(
   await vscode.commands.executeCommand("vscode.diff", left, right, title);
 }
 
+/**
+ * Opens a diff of the working-tree `path` against HEAD — staged and unstaged changes together,
+ * like loom's zz block. A file deleted from the working tree has nothing to diff against, so
+ * its HEAD version opens on its own instead.
+ */
+export async function openWorkingTreeDiff(
+  root: string,
+  path: string,
+): Promise<void> {
+  const head = gitShowUri(root, "HEAD", path);
+  const workingFile = vscode.Uri.joinPath(vscode.Uri.file(root), path);
+  try {
+    await vscode.workspace.fs.stat(workingFile);
+  } catch {
+    await vscode.commands.executeCommand("vscode.open", head);
+    return;
+  }
+  const title = `${basename(path)} (Working Tree)`;
+  await vscode.commands.executeCommand("vscode.diff", head, workingFile, title);
+}
+
 function basename(p: string): string {
   const idx = p.lastIndexOf("/");
   return idx === -1 ? p : p.slice(idx + 1);

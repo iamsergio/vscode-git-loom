@@ -22,7 +22,9 @@ unit-testable with plain mocha (`npm run test:unit`), independent of the VS Code
 - `textStatusParser.ts` — parses the text graph from `git-loom --no-color status -f` into a
   `LoomStatus`. git-loom has **no machine-readable status output yet**; this is the one place
   that knows its output grammar. Tested against real recorded outputs in
-  `test/fixtures/status/*.txt`.
+  `test/fixtures/status/*.txt`. The `zz [local changes]` block becomes `LoomStatus.localChanges`
+  (porcelain-style X/Y, untracked as `??`); `test/fixtures/make_local_changes_fixtures.sh`
+  re-records the `local-changes*.txt` fixtures.
 - `statusSource.ts` — `LoomStatusSource` interface + `TextStatusSource`. Everything outside
   `loom/` talks to `LoomStatusSource`, never to the parser directly, so a future
   `JsonStatusSource` (once git-loom grows one) can replace it without touching the tree or UI.
@@ -45,7 +47,8 @@ commands rather than adding
 another controller class.
 
 `extension.ts` also owns background refresh: a `FileSystemWatcher` on
-`.git/{HEAD,index,refs/**,packed-refs}` plus `onDidSaveTextDocument` schedule a debounced
+`.git/{HEAD,index,refs/**,packed-refs}`, a create/delete watcher on the rest of the workspace
+(for untracked files), plus `onDidSaveTextDocument` schedule a debounced
 `provider.refresh()` (`REFRESH_DEBOUNCE_MS`), skipped while the tree view isn't visible and
 caught up on when it becomes visible again.
 
