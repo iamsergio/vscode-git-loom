@@ -17,17 +17,13 @@ unit-testable with plain mocha (`npm run test:unit`), independent of the VS Code
 
 - `model.ts` — plain data types (`LoomStatus`, `BranchSection`, `Commit`, …), `LoomError`.
 - `runner.ts` — spawns `git-loom` / `git`, parses the one-line `--agent` JSON status git-loom
-  prints as the last line of stderr. All loom calls are serialized through one queue so a
-  background refresh can't race a reword.
-- `textStatusParser.ts` — parses the text graph from `git-loom --no-color status -f` into a
-  `LoomStatus`. git-loom has **no machine-readable status output yet**; this is the one place
-  that knows its output grammar. Tested against real recorded outputs in
-  `test/fixtures/status/*.txt`. The `zz [local changes]` block becomes `LoomStatus.localChanges`
-  (porcelain-style X/Y, untracked as `??`); `test/fixtures/make_local_changes_fixtures.sh`
-  re-records the `local-changes*.txt` fixtures.
-- `statusSource.ts` — `LoomStatusSource` interface + `TextStatusSource`. Everything outside
-  `loom/` talks to `LoomStatusSource`, never to the parser directly, so a future
-  `JsonStatusSource` (once git-loom grows one) can replace it without touching the tree or UI.
+  prints as the last line of **stdout** (git-loom >= 0.25; stderr is the human-readable stream).
+  All loom calls are serialized through one queue so a background refresh can't race a reword.
+- `jsonStatusParser.ts` — converts the `graph` field of `git-loom --agent status -f`'s JSON into a
+  `LoomStatus`; the one place that knows its wire shape (rejects an unknown `schema`). Untracked
+  local changes become porcelain-style `??`; loom's `different` remote state becomes `ahead`.
+- `statusSource.ts` — `LoomStatusSource` interface + `JsonStatusSource`. Everything outside
+  `loom/` talks to `LoomStatusSource`, never to the parser directly.
 
 **Identify commits by their abbreviated hash, never by loom's short IDs** (`fa`, `81`, …) — those
 are reallocated whenever other entities appear in the weave and are not stable across calls.

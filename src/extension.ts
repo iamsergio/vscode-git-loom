@@ -7,7 +7,7 @@ import {
 } from "./gitShowProvider";
 import { LoomError } from "./loom/model";
 import { runGit, runLoom } from "./loom/runner";
-import { TextStatusSource } from "./loom/statusSource";
+import { JsonStatusSource } from "./loom/statusSource";
 import { RewordController } from "./reword/rewordController";
 import { WeaveDragAndDropController } from "./tree/weaveDragAndDropController";
 import { WeaveNode } from "./tree/weaveNode";
@@ -38,7 +38,7 @@ async function resolveRepoRoot(): Promise<string> {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-  const statusSource = new TextStatusSource(getExecutable());
+  const statusSource = new JsonStatusSource(getExecutable());
   let currentStatusSource = statusSource;
   const provider = new WeaveTreeProvider(
     { getStatus: (root) => currentStatusSource.getStatus(root) },
@@ -390,7 +390,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("gitLoom.executable")) {
-        currentStatusSource = new TextStatusSource(getExecutable());
+        currentStatusSource = new JsonStatusSource(getExecutable());
         provider.refresh();
       }
     }),

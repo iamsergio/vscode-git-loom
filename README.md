@@ -20,7 +20,7 @@ rename yet.
 
 ## Requirements
 
-- [git-loom](https://github.com/narnaud/git-loom) `>= 0.23` on your `PATH`, or point
+- [git-loom](https://github.com/narnaud/git-loom) `>= 0.25` on your `PATH`, or point
   `gitLoom.executable` at it.
 - A repository set up with `git loom init`.
 
@@ -46,12 +46,11 @@ npm run format:fix
 ```
 
 `src/loom/` (the status parser, the loom/git runner, the `LoomStatusSource` interface) has no
-`vscode` import, so it's unit-testable with plain mocha (`npm run test:unit`) against the real
-recorded outputs in `test/fixtures/status/`.
+`vscode` import, so it's unit-testable with plain mocha (`npm run test:unit`).
 
-git-loom has no machine-readable `status` output yet, so the tree is built by parsing its text
-graph (`textStatusParser.ts`). That parsing is isolated behind `LoomStatusSource`
-(`statusSource.ts`), so a JSON-based source can replace it later without touching the tree or UI.
+The tree is built from the JSON graph `git-loom --agent status -f` prints on stdout
+(`jsonStatusParser.ts`), isolated behind `LoomStatusSource` (`statusSource.ts`) so the tree and
+UI never see the wire format.
 
 ## Releases
 

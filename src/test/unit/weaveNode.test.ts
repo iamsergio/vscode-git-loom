@@ -32,7 +32,6 @@ suite("buildFoldArgs", () => {
       section: {
         names: [{ name: "feat-a" }],
         commits: [],
-        stackedOnNext: false,
       },
       root: "/repo",
     };
