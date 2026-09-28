@@ -27,6 +27,6 @@ jobs:
 
       - name: Upload asset
         run: |
-          sh upload_package.sh
+          bash upload_package.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

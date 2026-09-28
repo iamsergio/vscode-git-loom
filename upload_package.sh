@@ -22,17 +22,14 @@ if [ ! -f $PACKAGE_FILENAME ]; then
 fi
 
 # Check if release exists:
-gh release view $TAG_NAME &> /dev/null
-if [ $? -ne 0 ]; then
+if ! gh release view $TAG_NAME > /dev/null 2>&1; then
     # Should not happen, as releases are created by release-please
     echo "Release $TAG_NAME does not exist"
     exit 1
 fi
 
 # Check if release already contains the asset:
-gh release view $TAG_NAME --json assets | jq -r '.assets[].name' | grep -q $PACKAGE_FILENAME
-
-if [ $? -eq 0 ]; then
+if gh release view $TAG_NAME --json assets -q '.assets[].name' | grep -qx $PACKAGE_FILENAME; then
     echo "Asset $PACKAGE_FILENAME already exists in release $TAG_NAME"
     exit 0
 fi
