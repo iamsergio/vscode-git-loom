@@ -26,7 +26,7 @@ export interface BranchName {
 export interface BranchSection {
   names: BranchName[]; // >1 when several branches point at the same tip (co-located)
   commits: Commit[]; // newest first; may be empty (empty branch)
-  stackedOnNext: boolean; // true when this section sits directly on top of the next one ("││")
+  stackedOn?: string; // name of the branch directly below in the stack, if any
 }
 
 export interface UpstreamInfo {

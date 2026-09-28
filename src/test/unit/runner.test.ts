@@ -7,11 +7,11 @@ suite("parseAgentLine", () => {
     assert.deepStrictEqual(agent, { status: "ok" });
   });
 
-  test("takes the last non-empty line when there's other stderr noise", () => {
-    const stderr = ["warning: something", "", '{"status":"ok","messages":["did a thing"]}', ""].join(
+  test("takes the last non-empty line when there's other stdout output", () => {
+    const stdout = ["diff --git a/x b/x", "", '{"status":"ok","messages":["did a thing"]}', ""].join(
       "\n",
     );
-    const agent = parseAgentLine(stderr);
+    const agent = parseAgentLine(stdout);
     assert.deepStrictEqual(agent, { status: "ok", messages: ["did a thing"] });
   });
 
@@ -20,11 +20,11 @@ suite("parseAgentLine", () => {
     assert.deepStrictEqual(agent, { status: "error", message: "boom" });
   });
 
-  test("returns undefined for non-JSON stderr", () => {
+  test("returns undefined for non-JSON stdout", () => {
     assert.strictEqual(parseAgentLine("some plain error text"), undefined);
   });
 
-  test("returns undefined for empty stderr", () => {
+  test("returns undefined for empty stdout", () => {
     assert.strictEqual(parseAgentLine(""), undefined);
   });
 

@@ -1,6 +1,7 @@
 /**
  * Spawns `git-loom` / `git` and parses the one-line --agent JSON status that
- * git-loom prints as the last line of stderr.
+ * git-loom prints as the last line of stdout (git-loom >= 0.25; stderr carries
+ * the human-readable output).
  *
  * No "vscode" import here: pure Node child_process, unit-testable directly.
  */
@@ -12,6 +13,7 @@ export interface AgentStatus {
   status: "ok" | "error" | "needs_input" | "needs_confirmation" | "paused";
   message?: string;
   messages?: string[];
+  graph?: unknown; // `status` only: the weave, parsed by jsonStatusParser.ts
 }
 
 export interface RunResult {
@@ -23,9 +25,9 @@ export interface RunResult {
 
 const MAX_BUFFER = 32 * 1024 * 1024;
 
-/** Extracts and parses the last non-empty line of `stderr` as an AgentStatus, if it looks like one. */
-export function parseAgentLine(stderr: string): AgentStatus | undefined {
-  const lines = stderr.split(/\r?\n/);
+/** Extracts and parses the last non-empty line of `stdout` as an AgentStatus, if it looks like one. */
+export function parseAgentLine(stdout: string): AgentStatus | undefined {
+  const lines = stdout.split(/\r?\n/);
   for (let i = lines.length - 1; i >= 0; i--) {
     const line = lines[i].trim();
     if (line === "") {
@@ -37,7 +39,7 @@ export function parseAgentLine(stderr: string): AgentStatus | undefined {
         return parsed;
       }
     } catch {
-      // Not JSON: the last non-empty stderr line isn't an agent status. Give up.
+      // Not JSON: the last non-empty stdout line isn't an agent status. Give up.
     }
     return undefined;
   }
@@ -79,7 +81,7 @@ function run(
         }
         const exitCode =
           typeof error?.code === "number" ? error.code : error ? 1 : 0;
-        resolve({ stdout, stderr, exitCode, agent: parseAgentLine(stderr) });
+        resolve({ stdout, stderr, exitCode, agent: parseAgentLine(stdout) });
       },
     );
   });

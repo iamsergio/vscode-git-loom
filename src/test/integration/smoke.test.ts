@@ -5,7 +5,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 import { runLoom } from "../../loom/runner";
-import { TextStatusSource } from "../../loom/statusSource";
+import { JsonStatusSource } from "../../loom/statusSource";
 import { buildFoldArgs, WeaveNode } from "../../tree/weaveNode";
 import { WeaveTreeProvider } from "../../tree/weaveTreeProvider";
 
@@ -49,7 +49,7 @@ suite("smoke", () => {
     assert.ok(commands.includes("gitLoom.showFiles"));
   });
 
-  test("TextStatusSource + reword against a real loom repo", async function () {
+  test("JsonStatusSource + reword against a real loom repo", async function () {
     if (!loomAvailable()) {
       this.skip();
       return;
@@ -76,7 +76,7 @@ suite("smoke", () => {
     fs.writeFileSync(path.join(demoDir, "b.txt"), "b\n");
     await runLoom("git-loom", ["commit", "-b", "feat-b", "-m", "feat: b", "b.txt"], demoDir);
 
-    const source = new TextStatusSource("git-loom");
+    const source = new JsonStatusSource("git-loom");
     const status = await source.getStatus(demoDir);
     assert.strictEqual(status.branches.length, 2);
 
@@ -113,7 +113,7 @@ suite("smoke", () => {
     fs.writeFileSync(path.join(demoDir, "a.txt"), "a\n");
     await runLoom("git-loom", ["commit", "-b", "feat-a", "-m", "feat: a", "a.txt"], demoDir);
 
-    const provider = new WeaveTreeProvider(new TextStatusSource("git-loom"), async () => demoDir);
+    const provider = new WeaveTreeProvider(new JsonStatusSource("git-loom"), async () => demoDir);
     const roots = await provider.getChildren();
 
     const branchNode = roots.find((n) => n.kind === "branch");
@@ -170,7 +170,7 @@ suite("smoke", () => {
     sh("git", ["branch", "-u", "origin/main"], demoDir);
     await runLoom("git-loom", ["init"], demoDir);
 
-    const provider = new WeaveTreeProvider(new TextStatusSource("git-loom"), async () => demoDir);
+    const provider = new WeaveTreeProvider(new JsonStatusSource("git-loom"), async () => demoDir);
 
     // Clean: the node is still there, but empty.
     let roots = await provider.getChildren();
@@ -221,7 +221,7 @@ suite("smoke", () => {
     fs.writeFileSync(path.join(demoDir, "b.txt"), "b\n");
     await runLoom("git-loom", ["commit", "-b", "feat-b", "-m", "feat: b", "b.txt"], demoDir);
 
-    const source = new TextStatusSource("git-loom");
+    const source = new JsonStatusSource("git-loom");
     const status = await source.getStatus(demoDir);
     const branchA = status.branches.find((b) => b.names.some((n) => n.name === "feat-a"));
     const branchB = status.branches.find((b) => b.names.some((n) => n.name === "feat-b"));
@@ -246,7 +246,7 @@ suite("smoke", () => {
   });
 
   test("WeaveTreeProvider shows an error node when the repo root resolver throws", async () => {
-    const provider = new WeaveTreeProvider(new TextStatusSource("git-loom"), async () => {
+    const provider = new WeaveTreeProvider(new JsonStatusSource("git-loom"), async () => {
       throw new Error("no workspace folder");
     });
     const roots = await provider.getChildren();

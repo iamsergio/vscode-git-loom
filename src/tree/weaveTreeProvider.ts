@@ -125,12 +125,14 @@ export class WeaveTreeProvider implements vscode.TreeDataProvider<WeaveNode> {
         nodes.push({ kind: "integration", commits: status.looseCommits, root });
       }
 
-      status.branches.forEach((section, i) => {
-        const stackedOnLabel = section.stackedOnNext
-          ? status.branches[i + 1]?.names[0]?.name
-          : undefined;
-        nodes.push({ kind: "branch", section, stackedOnLabel, root });
-      });
+      for (const section of status.branches) {
+        nodes.push({
+          kind: "branch",
+          section,
+          stackedOnLabel: section.stackedOn,
+          root,
+        });
+      }
 
       if (status.upstream) {
         nodes.push({ kind: "upstream", info: status.upstream });
