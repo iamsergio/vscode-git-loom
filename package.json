@@ -2,7 +2,7 @@
   "name": "vscode-git-loom",
   "displayName": "Git Loom",
   "description": "Browse and reword a git-loom weave from a sidebar tree view",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "publisher": "iamsergio",
   "repository": {
     "type": "git",
