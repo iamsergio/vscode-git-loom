@@ -1,15 +1,11 @@
 on:
   push:
     branches:
-      - master
-  pull_request:
-    branches:
-      - master
+      - main
 
 permissions:
   contents: write
   pull-requests: write
-  id-token: write
 
 name: release-please
 
