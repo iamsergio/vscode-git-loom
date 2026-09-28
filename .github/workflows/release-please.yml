@@ -20,3 +20,28 @@ jobs:
           release-type: node
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # Releases created with GITHUB_TOKEN don't trigger package.yml's
+      # `release: created`, so package and upload the .vsix here too.
+      - uses: actions/checkout@v7
+        if: ${{ steps.release.outputs.release_created }}
+      - name: Use Node.js
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.x
+      - name: Install dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          npm install --loglevel verbose
+          npm install @vscode/vsce typescript -g
+      - name: Package
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          vsce package
+      - name: Upload asset
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          bash upload_package.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
