@@ -12,6 +12,25 @@ import { runGit } from "../loom/runner";
 import { LoomStatusSource } from "../loom/statusSource";
 import { WeaveNode } from "./weaveNode";
 
+/** Scheme of the synthetic resourceUri on branch items; lets the decoration provider below color their label. */
+const BRANCH_URI_SCHEME = "git-loom-branch";
+
+/** Colors branch labels in the weave tree (a TreeItem label can only be colored through a file decoration). */
+export class BranchDecorationProvider implements vscode.FileDecorationProvider {
+  public provideFileDecoration(
+    uri: vscode.Uri,
+  ): vscode.FileDecoration | undefined {
+    if (uri.scheme !== BRANCH_URI_SCHEME) {
+      return undefined;
+    }
+    return new vscode.FileDecoration(
+      undefined,
+      undefined,
+      new vscode.ThemeColor("gitLoom.branchForeground"),
+    );
+  }
+}
+
 /** Resolves the repo root to run loom/git in, or throws a LoomError to show as an error node. */
 export type RepoRootResolver = () => Promise<string>;
 
@@ -292,6 +311,10 @@ function branchItem(element: {
     new vscode.ThemeColor("gitLoom.branchForeground"),
   );
   item.contextValue = "branch";
+  item.resourceUri = vscode.Uri.from({
+    scheme: BRANCH_URI_SCHEME,
+    path: `/${label}`,
+  });
 
   const descriptionParts: string[] = [];
   const remotes = section.names
