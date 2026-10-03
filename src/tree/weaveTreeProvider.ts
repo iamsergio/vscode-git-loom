@@ -62,7 +62,7 @@ export class WeaveTreeProvider implements vscode.TreeDataProvider<WeaveNode> {
       tooltip.appendText(message.trim().replace(/\n/g, "  \n"));
       item.tooltip = tooltip;
     } catch {
-      // keep the subject-only tooltip
+      // no tooltip beyond the default label
     }
     return item;
   }
@@ -336,7 +336,6 @@ function commitItem(
   item.iconPath = new vscode.ThemeIcon("git-commit");
   item.contextValue = "commit";
   item.description = commit.hash;
-  item.tooltip = `${commit.hash} — ${commit.subject}`;
   return item;
 }
 
