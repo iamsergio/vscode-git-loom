@@ -44,15 +44,28 @@ Longer description of feature A,
 spanning several lines." a.txt --agent > /dev/null
 
     echo "feature B" > b.txt
-    git loom commit -b feat-b -m "feat: add feature B" b.txt --agent > /dev/null
+    git loom commit -b feat-b -m "feat: add feature B
+
+Feature B is independent of feature A.
+
+- adds b.txt
+- exercises a bulleted list in the hover tooltip
+
+Refs: #42" b.txt --agent > /dev/null
 
     git loom branch new feat-a-stack -t feat-a --agent > /dev/null
     echo "on top of A" > c.txt
-    git loom commit -b feat-a-stack -m "feat: build on top of feature A" c.txt --agent > /dev/null
+    git loom commit -b feat-a-stack -m "feat: build on top of feature A
+
+Stacked on feat-a, so it shows up under that branch.
+Third line of the body." c.txt --agent > /dev/null
 
     echo "loose change" > d.txt
     git add d.txt
-    git commit -q -m "chore: a loose commit on integration"
+    git commit -q -m "chore: a loose commit on integration
+
+Not part of any branch.
+Used to check hovering loose commits too."
 )
 
 echo "Installing the packaged extension into a scratch VS Code profile..."
