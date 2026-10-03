@@ -48,6 +48,18 @@
     "loom"
   ],
   "contributes": {
+    "colors": [
+      {
+        "id": "gitLoom.branchForeground",
+        "description": "Color of branch icons in the Git Loom weave tree.",
+        "defaults": {
+          "dark": "#F29A4A",
+          "light": "#C25E00",
+          "highContrast": "#FFB067",
+          "highContrastLight": "#9A4A00"
+        }
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
