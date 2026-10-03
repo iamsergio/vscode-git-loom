@@ -287,7 +287,10 @@ function branchItem(element: {
       ? vscode.TreeItemCollapsibleState.Expanded
       : vscode.TreeItemCollapsibleState.None,
   );
-  item.iconPath = new vscode.ThemeIcon("git-branch");
+  item.iconPath = new vscode.ThemeIcon(
+    "git-branch",
+    new vscode.ThemeColor("gitLoom.branchForeground"),
+  );
   item.contextValue = "branch";
 
   const descriptionParts: string[] = [];
