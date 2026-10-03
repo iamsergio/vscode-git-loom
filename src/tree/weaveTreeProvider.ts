@@ -8,6 +8,7 @@ import {
   LoomError,
   UpstreamInfo,
 } from "../loom/model";
+import { runGit } from "../loom/runner";
 import { LoomStatusSource } from "../loom/statusSource";
 import { WeaveNode } from "./weaveNode";
 
@@ -41,6 +42,29 @@ export class WeaveTreeProvider implements vscode.TreeDataProvider<WeaveNode> {
     }
     this.showFiles = value;
     this.refresh();
+  }
+
+  /** Fills in the tooltip lazily: the status JSON only carries the subject, so hovering a commit asks git for the full message. */
+  public async resolveTreeItem(
+    item: vscode.TreeItem,
+    element: WeaveNode,
+  ): Promise<vscode.TreeItem> {
+    if (element.kind !== "commit") {
+      return item;
+    }
+    try {
+      const message = await runGit(
+        ["log", "-1", "--format=%B", element.commit.hash],
+        element.root,
+      );
+      const tooltip = new vscode.MarkdownString();
+      tooltip.appendMarkdown(`\`${element.commit.hash}\`\n\n`);
+      tooltip.appendText(message.trim().replace(/\n/g, "  \n"));
+      item.tooltip = tooltip;
+    } catch {
+      // keep the subject-only tooltip
+    }
+    return item;
   }
 
   public getTreeItem(element: WeaveNode): vscode.TreeItem {
