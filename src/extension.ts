@@ -11,7 +11,10 @@ import { JsonStatusSource } from "./loom/statusSource";
 import { RewordController } from "./reword/rewordController";
 import { WeaveDragAndDropController } from "./tree/weaveDragAndDropController";
 import { WeaveNode } from "./tree/weaveNode";
-import { WeaveTreeProvider } from "./tree/weaveTreeProvider";
+import {
+  BranchDecorationProvider,
+  WeaveTreeProvider,
+} from "./tree/weaveTreeProvider";
 
 const REFRESH_DEBOUNCE_MS = 500;
 
@@ -51,7 +54,12 @@ export function activate(context: vscode.ExtensionContext): void {
       provider.refresh(),
     ),
   });
-  context.subscriptions.push(treeView);
+  context.subscriptions.push(
+    treeView,
+    vscode.window.registerFileDecorationProvider(
+      new BranchDecorationProvider(),
+    ),
+  );
 
   const setShowFilesContext = (value: boolean): void => {
     void vscode.commands.executeCommand(
