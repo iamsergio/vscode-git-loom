@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/iamsergio/vscode-git-loom/compare/v1.0.0...v1.1.0) (2026-10-06)
+
+
+### Features
+
+* color branch icons orange in the weave tree ([7627d3a](https://github.com/iamsergio/vscode-git-loom/commit/7627d3a2a609d9275e3dbd65e4f59e921932ef5e))
+* color branch labels orange too ([9961bb9](https://github.com/iamsergio/vscode-git-loom/commit/9961bb96a8ecb955fbe8b33cabe398774ad8fabe))
+* show the full commit message in the commit hover tooltip ([ce4a214](https://github.com/iamsergio/vscode-git-loom/commit/ce4a21480860a1f1b946652d0d9086f936509644))
+
+
+### Bug Fixes
+
+* don't set a tooltip eagerly so resolveTreeItem can fill it in ([f31b09f](https://github.com/iamsergio/vscode-git-loom/commit/f31b09fda277f318745e3c2cae231c496d5e3545))
+
 ## 1.0.0 (2026-09-28)
 
 
